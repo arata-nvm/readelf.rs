@@ -7,8 +7,14 @@ type ElfAddr = u64;
 type ElfOff = u64;
 type ElfIdent = u128;
 
+#[derive(Debug)]
+struct ElfFile {
+    data: Vec<u8>,
+    header: ElfHeader,
+}
+
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct ElfHeader {
     ident: ElfIdent,
     filetype: ElfHalf,
@@ -63,14 +69,24 @@ fn main() {
     let command = args.get(1).unwrap();
     let filename = args.get(2).unwrap();
 
+    let elf = read_elf(filename);
+
     match command.as_str() {
-        "header" => show_header(filename),
+        "header" => show_header(&elf),
         _ => {}
     };
 }
 
-fn show_header(filename: &String) {
-    let header = read_header(filename);
+fn read_elf(filename: &String) -> ElfFile {
+    let data = fs::read(filename).unwrap();
+    let (_, body, _) = unsafe { data.align_to::<ElfHeader>() };
+    let header = *&body[0];
+
+    ElfFile { data, header }
+}
+
+fn show_header(elf: &ElfFile) {
+    let header = elf.header;
     let ident_bytes: [u8; 16] = header.ident.to_le_bytes();
 
     println!("ELF Header:");
@@ -167,11 +183,4 @@ fn get_machine_name(machine: u16) -> String {
         EM_X86_64 => "Advanced Micro Devices X86-64".to_string(),
         _ => format!("<unknown>: {:X}", machine),
     }
-}
-
-fn read_header(filename: &String) -> ElfHeader {
-    let data = fs::read(filename).unwrap();
-    let (_, body, _) = unsafe { data.align_to::<ElfHeader>() };
-    let header = &body[0];
-    *header
 }
