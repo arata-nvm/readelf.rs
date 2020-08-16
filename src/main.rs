@@ -17,6 +17,7 @@ struct ElfFile {
     data: Vec<u8>,
     header: ElfHeader,
     section_headers: Vec<ElfSectionHeader>,
+    program_headers: Vec<ElfProgramHeader>,
 }
 
 #[repr(C)]
@@ -51,6 +52,19 @@ struct ElfSectionHeader {
     info: ElfWord,
     alignment: ElfXword,
     entry_size: ElfXword,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+struct ElfProgramHeader {
+    segment_type: ElfWord,
+    flags: ElfWord,
+    offset: ElfOff,
+    virtual_addr: ElfAddr,
+    physical_addr: ElfAddr,
+    file_size: ElfXword,
+    memory_size: ElfXword,
+    alignment: ElfXword,
 }
 
 const EI_NIDENT: usize = 16;
@@ -115,6 +129,22 @@ const SHF_TLS: u64 = 1 << 10;
 const SHF_COMPRESSED: u64 = 1 << 11;
 const SHF_EXECLUDE: u64 = 1 << 31;
 
+const PT_NULL: u32 = 0;
+const PT_LOAD: u32 = 1;
+const PT_DYNAMIC: u32 = 2;
+const PT_INTERP: u32 = 3;
+const PT_NOTE: u32 = 4;
+const PT_SHLIB: u32 = 5;
+const PT_PHDR: u32 = 6;
+const PT_TLS: u32 = 7;
+const PT_GNU_EH_FRAME: u32 = 0x6474e550;
+const PT_GNU_STACK: u32 = 0x6474E551;
+const PT_GNU_RELRO: u32 = 0x6474E552;
+
+const PF_X: u32 = 1 << 0;
+const PF_W: u32 = 1 << 1;
+const PF_R: u32 = 1 << 2;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
@@ -129,6 +159,7 @@ fn main() {
     match command.as_str() {
         "header" => show_header(&elf),
         "sheader" => show_section_headers(&elf),
+        "pheader" => show_program_headers(&elf),
         _ => {}
     };
 }
@@ -148,10 +179,21 @@ fn read_elf(filename: &String) -> ElfFile {
         section_headers.push(*section_header);
     }
 
+    let mut program_headers: Vec<ElfProgramHeader> = Vec::new();
+    for i in 0..header.program_header_num {
+        let start_addr = header.program_header_offset as usize
+            + header.program_header_size as usize * i as usize;
+        let end_addr = start_addr as usize + header.program_header_size as usize;
+        let (_, body, _) = unsafe { data[start_addr..end_addr].align_to::<ElfProgramHeader>() };
+        let program_header = &body[0];
+        program_headers.push(*program_header);
+    }
+
     ElfFile {
         data,
         header,
         section_headers,
+        program_headers,
     }
 }
 
@@ -339,10 +381,62 @@ fn get_section_flags(flags: u64) -> String {
     s
 }
 
-fn get_flag_char(flags: u64, value: u64, sign: char) -> char {
+fn get_flag_char<T: Into<u64>>(flags: T, value: T, sign: char) -> char {
+    let flags = flags.into() as usize;
+    let value = value.into() as usize;
+
     if flags & value == value {
         sign
     } else {
         ' '
     }
+}
+
+fn show_program_headers(elf: &ElfFile) {
+    let program_headers = &elf.program_headers;
+
+    let mut table = Table::new();
+    table.set_titles(row![
+        "Type", "Offset", "VirtAddr", "PhysAddr", "FileSiz", "MemSiz", "Flags", "Align"
+    ]);
+    for ph in program_headers {
+        table.add_row(row![
+            get_segment_type(ph.segment_type),
+            format!("0x{:X}", ph.offset),
+            format!("0x{:X}", ph.virtual_addr),
+            format!("0x{:X}", ph.physical_addr),
+            format!("0x{:X}", ph.file_size),
+            format!("0x{:X}", ph.memory_size),
+            get_segment_flags(ph.flags),
+            format!("0x{:X}", ph.alignment),
+        ]);
+    }
+
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+    table.printstd();
+}
+
+fn get_segment_type(segment_type: u32) -> String {
+    match segment_type {
+        PT_NULL => "NULL".to_string(),
+        PT_LOAD => "LOAD".to_string(),
+        PT_DYNAMIC => "DYNAMIC".to_string(),
+        PT_INTERP => "INTERP".to_string(),
+        PT_NOTE => "NOTE".to_string(),
+        PT_SHLIB => "SHLIB".to_string(),
+        PT_PHDR => "PHDR".to_string(),
+        PT_TLS => "TLS".to_string(),
+        PT_GNU_EH_FRAME => "GNU_EH_FRAME".to_string(),
+        PT_GNU_STACK => "GNU_STACK".to_string(),
+        PT_GNU_RELRO => "GNU_RELRO".to_string(),
+        _ => format!("<unknown>: {:X}", segment_type),
+    }
+}
+
+fn get_segment_flags(flags: u32) -> String {
+    let mut s = String::new();
+    s.push(get_flag_char(flags, PF_R, 'R'));
+    s.push(get_flag_char(flags, PF_W, 'W'));
+    s.push(get_flag_char(flags, PF_X, 'E'));
+    s
 }
