@@ -16,6 +16,14 @@ fn main() {
     let elf = ElfFile::read_from_file(filename);
 
     match command.as_str() {
+        "all" => {
+            elf.show_header();
+            println!();
+            elf.show_section_headers();
+            println!();
+            elf.show_program_headers();
+            println!();
+        }
         "header" => elf.show_header(),
         "sheader" => elf.show_section_headers(),
         "pheader" => elf.show_program_headers(),
