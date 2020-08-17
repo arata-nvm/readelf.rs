@@ -97,7 +97,7 @@ impl ElfFile {
             SHT_NOBITS => "NOBITS".to_string(),
             SHT_REL => "REL".to_string(),
             SHT_SHLIB => "SHLIB".to_string(),
-            SHT_DYNSYM => "DYNSIM".to_string(),
+            SHT_DYNSYM => "DYNSYM".to_string(),
             SHT_INIT_ARRAY => "INIT_ARRAY".to_string(),
             SHT_FINI_ARRAY => "FINI_ARRAY".to_string(),
             SHT_PREINIT_ARRAY => "PREINIT_ARRAY".to_string(),
