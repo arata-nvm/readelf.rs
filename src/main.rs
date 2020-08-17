@@ -23,10 +23,12 @@ fn main() {
             println!();
             elf.show_program_headers();
             println!();
+            elf.show_symbol_tables();
         }
         "header" => elf.show_header(),
         "sheader" => elf.show_section_headers(),
         "pheader" => elf.show_program_headers(),
+        "symbol" => elf.show_symbol_tables(),
         _ => {}
     };
 }

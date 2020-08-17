@@ -1,10 +1,14 @@
 mod common;
 pub mod elf_header;
+pub mod elf_symbol;
 pub mod program_header;
 pub mod section_header;
 
 use crate::elf::{
-    elf_header::ElfHeader, program_header::ElfProgramHeader, section_header::ElfSectionHeader,
+    elf_header::ElfHeader,
+    elf_symbol::{ElfSymbol, ElfSymbolTable},
+    program_header::ElfProgramHeader,
+    section_header::ElfSectionHeader,
 };
 use std::fs;
 
@@ -13,6 +17,7 @@ type ElfWord = u32;
 type ElfXword = u64;
 type ElfAddr = u64;
 type ElfOff = u64;
+type ElfSection = u16;
 type ElfIdent = u128;
 
 #[derive(Debug)]
@@ -21,6 +26,7 @@ pub struct ElfFile {
     pub header: ElfHeader,
     pub section_headers: Vec<ElfSectionHeader>,
     pub program_headers: Vec<ElfProgramHeader>,
+    pub symbol_tables: Vec<ElfSymbolTable>,
 }
 
 impl ElfFile {
@@ -30,12 +36,14 @@ impl ElfFile {
         let header = Self::read_header(&data);
         let section_headers = Self::read_section_headers(&header, &data);
         let program_headers = Self::read_program_headers(&header, &data);
+        let symbols = Self::read_symbols(&section_headers, &data);
 
         Self {
             data,
             header,
             section_headers,
             program_headers,
+            symbol_tables: symbols,
         }
     }
 
@@ -68,5 +76,36 @@ impl ElfFile {
             program_headers.push(*program_header);
         }
         program_headers
+    }
+
+    fn read_symbols(
+        section_headers: &Vec<ElfSectionHeader>,
+        data: &Vec<u8>,
+    ) -> Vec<ElfSymbolTable> {
+        section_headers
+            .iter()
+            .enumerate()
+            .filter(|(_, sh)| match sh.section_type {
+                section_header::SHT_SYMTAB | section_header::SHT_DYNSYM => true,
+                _ => false,
+            })
+            .map(|(i, sh)| ElfSymbolTable {
+                index: i,
+                symbols: Self::read_symbols_from_section(sh, data),
+            })
+            .collect()
+    }
+
+    fn read_symbols_from_section(sh: &ElfSectionHeader, data: &Vec<u8>) -> Vec<ElfSymbol> {
+        let mut symbols: Vec<ElfSymbol> = Vec::new();
+        let symbol_num = sh.size / sh.entry_size;
+        for i in 0..symbol_num {
+            let start_addr = sh.offset as usize + sh.entry_size as usize * i as usize;
+            let end_addr = start_addr as usize + sh.entry_size as usize;
+            let (_, body, _) = unsafe { data[start_addr..end_addr].align_to::<ElfSymbol>() };
+            let symbol = &body[0];
+            symbols.push(*symbol);
+        }
+        symbols
     }
 }
