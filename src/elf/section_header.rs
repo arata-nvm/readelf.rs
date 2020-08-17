@@ -54,7 +54,9 @@ pub const SHF_EXECLUDE: u64 = 1 << 31;
 
 impl ElfFile {
     pub fn show_section_headers(&self) {
+        let header = &self.header;
         let section_headers = &self.section_headers;
+        let shstrtab = &section_headers[header.string_table_index as usize];
 
         println!("Section headers:");
 
@@ -66,7 +68,7 @@ impl ElfFile {
         for (i, sh) in section_headers.iter().enumerate() {
             table.add_row(row![
                 i,
-                self.get_section_name(&sh),
+                self.get_name_from_strtab(shstrtab, sh.name as usize),
                 self.get_section_type_name(sh.section_type),
                 format!("0x{:x}", sh.addr),
                 format!("0x{:x}", sh.offset),
@@ -80,18 +82,6 @@ impl ElfFile {
         }
         table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
         table.printstd();
-    }
-
-    fn get_section_name(&self, sh: &ElfSectionHeader) -> String {
-        let header = &self.header;
-        let section_headers = &self.section_headers;
-        let shstrtab = &section_headers[header.string_table_index as usize];
-        let start_addr = shstrtab.offset as usize + sh.name as usize;
-        self.data[start_addr..]
-            .iter()
-            .take_while(|&&v| v != 0)
-            .map(|&v| v as char)
-            .collect()
     }
 
     fn get_section_type_name(&self, shtype: u32) -> String {
