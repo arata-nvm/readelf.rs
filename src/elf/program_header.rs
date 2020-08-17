@@ -36,6 +36,8 @@ impl ElfFile {
     pub fn show_program_headers(&self) {
         let program_headers = &self.program_headers;
 
+        println!("Program headers:");
+
         let mut table = Table::new();
         table.set_titles(row![
             "Type", "Offset", "VirtAddr", "PhysAddr", "FileSiz", "MemSiz", "Flags", "Align"
@@ -52,7 +54,6 @@ impl ElfFile {
                 format!("0x{:X}", ph.alignment),
             ]);
         }
-
         table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
         table.printstd();
     }

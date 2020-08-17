@@ -56,8 +56,9 @@ impl ElfFile {
     pub fn show_section_headers(&self) {
         let section_headers = &self.section_headers;
 
-        let mut table = Table::new();
+        println!("Section headers:");
 
+        let mut table = Table::new();
         table.set_titles(row![
             "Nr", "Name", "Type", "Address", "Offset", "Size", "EntSize", "Flags", "Link", "Info",
             "Align"
@@ -77,7 +78,6 @@ impl ElfFile {
                 sh.alignment,
             ]);
         }
-
         table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
         table.printstd();
     }
