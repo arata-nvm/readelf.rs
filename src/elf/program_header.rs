@@ -16,21 +16,21 @@ pub struct ElfProgramHeader {
     pub alignment: ElfXword,
 }
 
-const PT_NULL: u32 = 0;
-const PT_LOAD: u32 = 1;
-const PT_DYNAMIC: u32 = 2;
-const PT_INTERP: u32 = 3;
-const PT_NOTE: u32 = 4;
-const PT_SHLIB: u32 = 5;
-const PT_PHDR: u32 = 6;
-const PT_TLS: u32 = 7;
-const PT_GNU_EH_FRAME: u32 = 0x6474e550;
-const PT_GNU_STACK: u32 = 0x6474E551;
-const PT_GNU_RELRO: u32 = 0x6474E552;
+pub const PT_NULL: u32 = 0;
+pub const PT_LOAD: u32 = 1;
+pub const PT_DYNAMIC: u32 = 2;
+pub const PT_INTERP: u32 = 3;
+pub const PT_NOTE: u32 = 4;
+pub const PT_SHLIB: u32 = 5;
+pub const PT_PHDR: u32 = 6;
+pub const PT_TLS: u32 = 7;
+pub const PT_GNU_EH_FRAME: u32 = 0x6474e550;
+pub const PT_GNU_STACK: u32 = 0x6474E551;
+pub const PT_GNU_RELRO: u32 = 0x6474E552;
 
-const PF_X: u32 = 1 << 0;
-const PF_W: u32 = 1 << 1;
-const PF_R: u32 = 1 << 2;
+pub const PF_X: u32 = 1 << 0;
+pub const PF_W: u32 = 1 << 1;
+pub const PF_R: u32 = 1 << 2;
 
 impl ElfFile {
     pub fn show_program_headers(&self) {

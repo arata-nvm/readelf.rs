@@ -19,33 +19,33 @@ pub struct ElfHeader {
     pub string_table_index: ElfHalf,
 }
 
-const EI_NIDENT: usize = 16;
-const EI_CLASS: usize = 4;
-const EI_DATA: usize = 5;
-const EI_VERSION: usize = 6;
-const EI_OSABI: usize = 7;
-const EI_ABIVERSION: usize = 8;
+pub const EI_NIDENT: usize = 16;
+pub const EI_CLASS: usize = 4;
+pub const EI_DATA: usize = 5;
+pub const EI_VERSION: usize = 6;
+pub const EI_OSABI: usize = 7;
+pub const EI_ABIVERSION: usize = 8;
 
-const EV_CURRENT: u8 = 1;
+pub const EV_CURRENT: u8 = 1;
 
-const ELF_CLASS_NONE: u8 = 0;
-const ELF_CLASS_32: u8 = 1;
-const ELF_CLASS_64: u8 = 2;
+pub const ELF_CLASS_NONE: u8 = 0;
+pub const ELF_CLASS_32: u8 = 1;
+pub const ELF_CLASS_64: u8 = 2;
 
-const ELF_DATA_NONE: u8 = 0;
-const ELF_DATA_2_LSB: u8 = 1;
-const ELF_DATA_2_MSB: u8 = 2;
+pub const ELF_DATA_NONE: u8 = 0;
+pub const ELF_DATA_2_LSB: u8 = 1;
+pub const ELF_DATA_2_MSB: u8 = 2;
 
-const ELF_OSABI_NONE: u8 = 0;
+pub const ELF_OSABI_NONE: u8 = 0;
 
-const ET_NONE: u16 = 0;
-const ET_REL: u16 = 1;
-const ET_EXEC: u16 = 2;
-const ET_DYN: u16 = 3;
-const ET_CORE: u16 = 4;
+pub const ET_NONE: u16 = 0;
+pub const ET_REL: u16 = 1;
+pub const ET_EXEC: u16 = 2;
+pub const ET_DYN: u16 = 3;
+pub const ET_CORE: u16 = 4;
 
-const EM_NONE: u16 = 0;
-const EM_X86_64: u16 = 62;
+pub const EM_NONE: u16 = 0;
+pub const EM_X86_64: u16 = 62;
 
 impl ElfFile {
     pub fn show_header(&self) {
